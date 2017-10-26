@@ -1,0 +1,19 @@
+# Specialized make target for building the deployment artifacts / scap deploy
+# The virtual environment location.
+VENV ?= $(CURDIR)/venv
+# The distribution to create the virtualenv for. Auto-detection is the default
+DISTRO ?= $(shell lsb_release -sc)
+
+### Scap-related tasks ###
+# task deploy
+# This task will create the virtualenv if not present, unpack the wheels present
+# in the artifacts directory, install them and install the software inside the
+# virtualenv.
+deploy: $(VENV)
+	cd $(CURDIR)/artifacts && tar --owner=$(UID) -zxvf artifacts.$(DISTRO).tar.gz
+	$(VENV)/bin/pip install --no-deps $(CURDIR)/artifacts/*.whl
+
+# task venv
+# Creates the virtualenv if not present
+$(VENV):
+	virtualenv --python python3 $(VENV)

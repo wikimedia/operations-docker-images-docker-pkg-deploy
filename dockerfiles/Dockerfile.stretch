@@ -1,0 +1,13 @@
+FROM docker-registry.wikimedia.org/python3-devel:latest
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive \
+    apt-get -y --no-install-recommends install python3-pip python3-setuptools \
+            git \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && mkdir /wheels && pip3 install wheel
+
+COPY run.sh /bin/run.sh
+
+VOLUME ["/wheels", "/deploy"]
+
+CMD ["/bin/run.sh"]

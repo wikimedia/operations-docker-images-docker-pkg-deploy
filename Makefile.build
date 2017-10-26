@@ -1,0 +1,54 @@
+# Specialized makefile for building the deployment artifacts
+# Global build dir
+BUILD_DIR = $(CURDIR)/build
+# Directory where the wheels are built
+WHEELS_DIR = $(BUILD_DIR)/wheels
+
+JESSIE_ARTIFACTS = $(WHEELS_DIR)/jessie/artifacts.tar.gz
+STRETCH_ARTIFACTS = $(WHEELS_DIR)/stretch/artifacts.tar.gz
+### Build-related tasks ###
+# task all
+# clean the build environment, and recreate the wheels.
+all: clean artifacts
+
+# task artifacts
+# Build the wheels for all or a specific DISTRO inside a container, and get the tar to the right place
+artifacts: $(JESSIE_ARTIFACTS) $(STRETCH_ARTIFACTS)
+	cp $(JESSIE_ARTIFACTS) $(CURDIR)/artifacts/artifacts.jessie.tar.gz
+	cp $(STRETCH_ARTIFACTS) $(CURDIR)/artifacts/artifacts.stretch.gz
+
+$(JESSIE_ARTIFACTS): docker-image-jessie.created
+	mkdir -p $(WHEELS_DIR)/jessie
+	docker run --rm -v $(CURDIR):/deploy:ro -v $(WHEELS_DIR)/jessie:/wheels:rw -v /etc/group:/etc/group:ro \
+		-v /etc/passwd:/etc/passwd:ro --user=$(UID) jessie-wheels-builder:latest
+
+$(STRETCH_ARTIFACTS): docker-image-stretch.created
+	mkdir -p $(WHEELS_DIR)/stretch
+	docker run --rm -v $(CURDIR):/deploy:ro -v $(WHEELS_DIR)/stretch:/wheels:rw -v /etc/group:/etc/group:ro \
+		-v /etc/passwd:/etc/passwd:ro --user=$(UID) stretch-wheels-builder:latest
+
+# task clean[-DISTRO]
+# clean docker artifacts for one distro, or all artifacts
+clean: clean.jessie clean.stretch
+	- rm -rf $(WHEELS_DIR)
+
+clean.jessie:
+	-rm docker-image-jessie.created
+	-docker rmi jessie-wheels-builder:latest
+
+clean.stretch:
+	-rm docker-image-stretch.created
+	-docker rmi stretch-wheels-builder:latest
+
+# task docker-image-DISTRO.created
+# Create the docker image for building wheels
+docker-image-stretch.created:
+	cd dockerfiles && docker build -t stretch-wheels-builder:latest -f Dockerfile.stretch .
+	touch docker-image-stretch.created
+
+docker-image-jessie.created:
+	cd dockerfiles && docker build -t jessie-wheels-builder:latest -f Dockerfile.jessie .
+	touch docker-image-jessie.created
+
+
+PHONY: all wheels clean clean.jessie clean.stretch

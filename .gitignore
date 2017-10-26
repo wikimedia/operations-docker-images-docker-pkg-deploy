@@ -1,0 +1,4 @@
+build
+artifacts/*.whl
+docker-image-jessie.created
+docker-image-stretch.created

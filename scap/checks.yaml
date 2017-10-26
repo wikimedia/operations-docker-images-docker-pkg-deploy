@@ -1,0 +1,6 @@
+checks:
+  virtualenv:
+    type: command
+    stage: promote
+    timeout: 300
+    command: bash /srv/deployment/docker_pkg/deploy/scap/cmd.sh

@@ -1,0 +1,3 @@
+[submodule "src"]
+	path = src
+	url = https://gerrit.wikimedia.org/r/operations/docker-images/docker-pkg
