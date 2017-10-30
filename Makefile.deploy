@@ -16,4 +16,4 @@ deploy: $(VENV)
 # task venv
 # Creates the virtualenv if not present
 $(VENV):
-	virtualenv --python python3 $(VENV)
+	virtualenv --python python3 --never-download $(VENV)

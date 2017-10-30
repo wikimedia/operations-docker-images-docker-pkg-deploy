@@ -3,4 +3,4 @@ checks:
     type: command
     stage: promote
     timeout: 300
-    command: bash /srv/deployment/docker_pkg/deploy/scap/cmd.sh
+    command: bash /srv/deployment/docker-pkg/deploy/scap/cmd.sh
