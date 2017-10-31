@@ -3,6 +3,7 @@
 BUILD_DIR = $(CURDIR)/build
 # Directory where the wheels are built
 WHEELS_DIR = $(BUILD_DIR)/wheels
+IMG_BASENAME := 'docker-registry.wikimedia.org/python3-build'
 
 JESSIE_ARTIFACTS = $(WHEELS_DIR)/jessie/artifacts.tar.gz
 STRETCH_ARTIFACTS = $(WHEELS_DIR)/stretch/artifacts.tar.gz
@@ -17,38 +18,21 @@ artifacts: $(JESSIE_ARTIFACTS) $(STRETCH_ARTIFACTS)
 	cp $(JESSIE_ARTIFACTS) $(CURDIR)/artifacts/artifacts.jessie.tar.gz
 	cp $(STRETCH_ARTIFACTS) $(CURDIR)/artifacts/artifacts.stretch.tar.gz
 
-$(JESSIE_ARTIFACTS): docker-image-jessie.created
+$(JESSIE_ARTIFACTS):
+	docker pull $(IMG_BASENAME)-jessie:latest
 	mkdir -p $(WHEELS_DIR)/jessie
 	docker run --rm -v $(CURDIR):/deploy:ro -v $(WHEELS_DIR)/jessie:/wheels:rw -v /etc/group:/etc/group:ro \
-		-v /etc/passwd:/etc/passwd:ro --user=$(UID) jessie-wheels-builder:latest
+		-v /etc/passwd:/etc/passwd:ro --user=$(UID) $(IMG_BASENAME)-jessie:latest
 
-$(STRETCH_ARTIFACTS): docker-image-stretch.created
+$(STRETCH_ARTIFACTS):
+	docker pull $(IMG_BASENAME)-stretch:latest
 	mkdir -p $(WHEELS_DIR)/stretch
 	docker run --rm -v $(CURDIR):/deploy:ro -v $(WHEELS_DIR)/stretch:/wheels:rw -v /etc/group:/etc/group:ro \
-		-v /etc/passwd:/etc/passwd:ro --user=$(UID) stretch-wheels-builder:latest
+		-v /etc/passwd:/etc/passwd:ro --user=$(UID) $(IMG_BASENAME)-stretch:latest
 
 # task clean[-DISTRO]
 # clean docker artifacts for one distro, or all artifacts
-clean: clean.jessie clean.stretch
+clean:
 	- rm -rf $(WHEELS_DIR)
 
-clean.jessie:
-	-rm docker-image-jessie.created
-	-docker rmi jessie-wheels-builder:latest
-
-clean.stretch:
-	-rm docker-image-stretch.created
-	-docker rmi stretch-wheels-builder:latest
-
-# task docker-image-DISTRO.created
-# Create the docker image for building wheels
-docker-image-stretch.created:
-	cd dockerfiles && docker build -t stretch-wheels-builder:latest -f Dockerfile.stretch .
-	touch docker-image-stretch.created
-
-docker-image-jessie.created:
-	cd dockerfiles && docker build -t jessie-wheels-builder:latest -f Dockerfile.jessie .
-	touch docker-image-jessie.created
-
-
-.PHONY: artifacts all wheels clean clean.jessie clean.stretch
+.PHONY: artifacts all wheels clean
