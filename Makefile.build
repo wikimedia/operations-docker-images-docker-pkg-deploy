@@ -15,7 +15,7 @@ all: clean artifacts
 # Build the wheels for all or a specific DISTRO inside a container, and get the tar to the right place
 artifacts: $(JESSIE_ARTIFACTS) $(STRETCH_ARTIFACTS)
 	cp $(JESSIE_ARTIFACTS) $(CURDIR)/artifacts/artifacts.jessie.tar.gz
-	cp $(STRETCH_ARTIFACTS) $(CURDIR)/artifacts/artifacts.stretch.gz
+	cp $(STRETCH_ARTIFACTS) $(CURDIR)/artifacts/artifacts.stretch.tar.gz
 
 $(JESSIE_ARTIFACTS): docker-image-jessie.created
 	mkdir -p $(WHEELS_DIR)/jessie
@@ -51,4 +51,4 @@ docker-image-jessie.created:
 	touch docker-image-jessie.created
 
 
-PHONY: all wheels clean clean.jessie clean.stretch
+.PHONY: artifacts all wheels clean clean.jessie clean.stretch
