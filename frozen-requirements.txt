@@ -9,5 +9,5 @@ python-debian==0.1.34
 PyYAML==5.1
 requests==2.21.0
 six==1.12.0
-urllib3==1.24.1
+urllib3==1.24.2
 websocket-client==0.56.0
