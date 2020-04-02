@@ -7,6 +7,7 @@ IMG_BASENAME := 'docker-registry.wikimedia.org/python3-build'
 
 JESSIE_ARTIFACTS = $(WHEELS_DIR)/jessie/artifacts.tar.gz
 STRETCH_ARTIFACTS = $(WHEELS_DIR)/stretch/artifacts.tar.gz
+BUSTER_ARTIFACTS = $(WHEELS_DIR)/buster/artifacts.tar.gz
 ### Build-related tasks ###
 # task all
 # clean the build environment, and recreate the wheels.
@@ -14,9 +15,10 @@ all: clean artifacts
 
 # task artifacts
 # Build the wheels for all or a specific DISTRO inside a container, and get the tar to the right place
-artifacts: $(JESSIE_ARTIFACTS) $(STRETCH_ARTIFACTS)
+artifacts: $(JESSIE_ARTIFACTS) $(STRETCH_ARTIFACTS) $(BUSTER_ARTIFACTS)
 	cp $(JESSIE_ARTIFACTS) $(CURDIR)/artifacts/artifacts.jessie.tar.gz
 	cp $(STRETCH_ARTIFACTS) $(CURDIR)/artifacts/artifacts.stretch.tar.gz
+	cp $(BUSTER_ARTIFACTS) $(CURDIR)/artifacts/artifacts.buster.tar.gz
 
 $(JESSIE_ARTIFACTS):
 	docker pull $(IMG_BASENAME)-jessie:latest
@@ -29,6 +31,12 @@ $(STRETCH_ARTIFACTS):
 	mkdir -p $(WHEELS_DIR)/stretch
 	docker run --rm -v $(CURDIR):/deploy:ro -v $(WHEELS_DIR)/stretch:/wheels:rw -v /etc/group:/etc/group:ro \
 		-v /etc/passwd:/etc/passwd:ro --user=$(UID) $(IMG_BASENAME)-stretch:latest
+
+$(BUSTER_ARTIFACTS):
+	docker pull $(IMG_BASENAME)-buster:latest
+	mkdir -p $(WHEELS_DIR)/buster
+	docker run --rm -v $(CURDIR):/deploy:ro -v $(WHEELS_DIR)/buster:/wheels:rw -v /etc/group:/etc/group:ro \
+		-v /etc/passwd:/etc/passwd:ro --user=$(UID) $(IMG_BASENAME)-buster:latest
 
 # task clean[-DISTRO]
 # clean docker artifacts for one distro, or all artifacts
