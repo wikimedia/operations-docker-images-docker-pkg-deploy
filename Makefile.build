@@ -6,6 +6,7 @@ WHEELS_DIR = $(BUILD_DIR)/wheels
 IMG_BASENAME := 'docker-registry.wikimedia.org/python3-build'
 
 BUSTER_ARTIFACTS = $(WHEELS_DIR)/buster/artifacts.tar.gz
+BULLSEYE_ARTIFACTS = $(WHEELS_DIR)/bullseye/artifacts.tar.gz
 ### Build-related tasks ###
 # task all
 # clean the build environment, and recreate the wheels.
@@ -13,14 +14,21 @@ all: clean artifacts
 
 # task artifacts
 # Build the wheels for all or a specific DISTRO inside a container, and get the tar to the right place
-artifacts: $(BUSTER_ARTIFACTS)
+artifacts: $(BUSTER_ARTIFACTS) $(BULLSEYE_ARTIFACTS)
 	cp $(BUSTER_ARTIFACTS) $(CURDIR)/artifacts/artifacts.buster.tar.gz
+	cp $(BULLSEYE_ARTIFACTS) $(CURDIR)/artifacts/artifacts.bullseye.tar.gz        
 
 $(BUSTER_ARTIFACTS):
 	docker pull $(IMG_BASENAME)-buster:latest
 	mkdir -p $(WHEELS_DIR)/buster
 	docker run --rm -v $(CURDIR):/deploy:ro -v $(WHEELS_DIR)/buster:/wheels:rw -v /etc/group:/etc/group:ro \
 		-v /etc/passwd:/etc/passwd:ro --user=$(UID) $(IMG_BASENAME)-buster:latest
+
+$(BULLSEYE_ARTIFACTS):
+	docker pull $(IMG_BASENAME)-bullseye:latest
+	mkdir -p $(WHEELS_DIR)/bullseye
+	docker run --rm -v $(CURDIR):/deploy:ro -v $(WHEELS_DIR)/bullseye:/wheels:rw -v /etc/group:/etc/group:ro \
+		-v /etc/passwd:/etc/passwd:ro --user=$(UID) $(IMG_BASENAME)-bullseye:latest
 
 # task clean[-DISTRO]
 # clean docker artifacts for one distro, or all artifacts
