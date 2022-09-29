@@ -1,4 +1,6 @@
 # Specialized makefile for building the deployment artifacts
+# Global shell setting
+SHELL = /bin/bash
 # Global build dir
 BUILD_DIR = $(CURDIR)/build
 # Directory where the wheels are built
@@ -10,13 +12,13 @@ BULLSEYE_ARTIFACTS = $(WHEELS_DIR)/bullseye/artifacts.tar.gz
 ### Build-related tasks ###
 # task all
 # clean the build environment, and recreate the wheels.
-all: clean artifacts
+all: clean diff
 
 # task artifacts
 # Build the wheels for all or a specific DISTRO inside a container, and get the tar to the right place
 artifacts: $(BUSTER_ARTIFACTS) $(BULLSEYE_ARTIFACTS)
 	cp $(BUSTER_ARTIFACTS) $(CURDIR)/artifacts/artifacts.buster.tar.gz
-	cp $(BULLSEYE_ARTIFACTS) $(CURDIR)/artifacts/artifacts.bullseye.tar.gz        
+	cp $(BULLSEYE_ARTIFACTS) $(CURDIR)/artifacts/artifacts.bullseye.tar.gz
 
 $(BUSTER_ARTIFACTS):
 	docker pull $(IMG_BASENAME)-buster:latest
@@ -30,9 +32,15 @@ $(BULLSEYE_ARTIFACTS):
 	docker run --rm -v $(CURDIR):/deploy:ro -v $(WHEELS_DIR)/bullseye:/wheels:rw -v /etc/group:/etc/group:ro \
 		-v /etc/passwd:/etc/passwd:ro --user=$(UID) $(IMG_BASENAME)-bullseye:latest
 
+# task diff
+# Output the diff between the last and current revision of artifacts
+diff: artifacts
+	diff -u <(tar -tzf <(git show HEAD^:artifacts/artifacts.buster.tar.gz))  <(tar -tzf $(CURDIR)/artifacts/artifacts.buster.tar.gz) ||:
+	diff -u <(tar -tzf <(git show HEAD^:artifacts/artifacts.bullseye.tar.gz))  <(tar -tzf $(CURDIR)/artifacts/artifacts.bullseye.tar.gz) ||:
+
 # task clean[-DISTRO]
 # clean docker artifacts for one distro, or all artifacts
 clean:
 	- rm -rf $(WHEELS_DIR)
 
-.PHONY: artifacts all wheels clean
+.PHONY: artifacts all wheels clean diff
