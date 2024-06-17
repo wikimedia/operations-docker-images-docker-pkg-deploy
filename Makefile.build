@@ -7,7 +7,6 @@ BUILD_DIR = $(CURDIR)/build
 WHEELS_DIR = $(BUILD_DIR)/wheels
 IMG_BASENAME := 'docker-registry.wikimedia.org/python3-build'
 
-BUSTER_ARTIFACTS = $(WHEELS_DIR)/buster/artifacts.tar.gz
 BULLSEYE_ARTIFACTS = $(WHEELS_DIR)/bullseye/artifacts.tar.gz
 ### Build-related tasks ###
 # task all
@@ -16,15 +15,8 @@ all: clean diff
 
 # task artifacts
 # Build the wheels for all or a specific DISTRO inside a container, and get the tar to the right place
-artifacts: $(BUSTER_ARTIFACTS) $(BULLSEYE_ARTIFACTS)
-	cp $(BUSTER_ARTIFACTS) $(CURDIR)/artifacts/artifacts.buster.tar.gz
+artifacts: $(BULLSEYE_ARTIFACTS)
 	cp $(BULLSEYE_ARTIFACTS) $(CURDIR)/artifacts/artifacts.bullseye.tar.gz
-
-$(BUSTER_ARTIFACTS):
-	docker pull $(IMG_BASENAME)-buster:latest
-	mkdir -p $(WHEELS_DIR)/buster
-	docker run --rm -v $(CURDIR):/deploy:ro -v $(WHEELS_DIR)/buster:/wheels:rw -v /etc/group:/etc/group:ro \
-		-v /etc/passwd:/etc/passwd:ro --user=$(UID) $(IMG_BASENAME)-buster:latest
 
 $(BULLSEYE_ARTIFACTS):
 	docker pull $(IMG_BASENAME)-bullseye:latest
@@ -35,7 +27,6 @@ $(BULLSEYE_ARTIFACTS):
 # task diff
 # Output the diff between the last and current revision of artifacts
 diff: artifacts
-	diff -u <(tar -tzf <(git show HEAD^:artifacts/artifacts.buster.tar.gz))  <(tar -tzf $(CURDIR)/artifacts/artifacts.buster.tar.gz) ||:
 	diff -u <(tar -tzf <(git show HEAD^:artifacts/artifacts.bullseye.tar.gz))  <(tar -tzf $(CURDIR)/artifacts/artifacts.bullseye.tar.gz) ||:
 
 # task clean[-DISTRO]
