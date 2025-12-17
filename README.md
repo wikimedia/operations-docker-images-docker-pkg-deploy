@@ -29,9 +29,11 @@ pip freeze --exclude docker-pkg > frozen-requirements.txt
 
 ## Build the artifacts locally
 ```
-make -f Makefile.build
+make -f Makefile.build {bullseye,trixie,all}
 ```
-Remember to check the diff the Makefile outputs.
+Remember to check the diff the Makefile outputs with the target 'all'. If you use the OS-specific
+targets, you'll have to run the diff-$os target as well since it is not done by default
+(to prevent errors the first time that you add a new distro etc..)
 
 ## Commit your changes
 ```

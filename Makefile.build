@@ -8,30 +8,35 @@ WHEELS_DIR = $(BUILD_DIR)/wheels
 IMG_BASENAME := 'docker-registry.wikimedia.org/python3-build'
 
 BULLSEYE_ARTIFACTS = $(WHEELS_DIR)/bullseye/artifacts.tar.gz
+TRIXIE_ARTIFACTS = $(WHEELS_DIR)/trixie/artifacts.tar.gz
+
 ### Build-related tasks ###
 # task all
 # clean the build environment, and recreate the wheels.
-all: clean diff
+all: clean bullseye diff-bullseye trixie diff-trixie
 
-# task artifacts
-# Build the wheels for all or a specific DISTRO inside a container, and get the tar to the right place
-artifacts: $(BULLSEYE_ARTIFACTS)
+artifacts: bullseye trixie
+
+bullseye: os-artifacts-bullseye
 	cp $(BULLSEYE_ARTIFACTS) $(CURDIR)/artifacts/artifacts.bullseye.tar.gz
 
-$(BULLSEYE_ARTIFACTS):
-	docker pull $(IMG_BASENAME)-bullseye:latest
-	mkdir -p $(WHEELS_DIR)/bullseye
-	docker run --rm -v $(CURDIR):/deploy:ro -v $(WHEELS_DIR)/bullseye:/wheels:rw -v /etc/group:/etc/group:ro \
-		-v /etc/passwd:/etc/passwd:ro --user=$(UID) $(IMG_BASENAME)-bullseye:latest
+trixie: os-artifacts-trixie
+	cp $(TRIXIE_ARTIFACTS) $(CURDIR)/artifacts/artifacts.trixie.tar.gz
+
+os-artifacts-%:
+	docker pull $(IMG_BASENAME)-$*:latest
+	mkdir -p $(WHEELS_DIR)/$*
+	docker run --rm -v $(CURDIR):/deploy:ro -v $(WHEELS_DIR)/$*:/wheels:rw -v /etc/group:/etc/group:ro \
+		-v /etc/passwd:/etc/passwd:ro --user=$$(id -u) $(IMG_BASENAME)-$*:latest
 
 # task diff
 # Output the diff between the last and current revision of artifacts
-diff: artifacts
-	diff -u <(tar -tzf <(git show HEAD^:artifacts/artifacts.bullseye.tar.gz))  <(tar -tzf $(CURDIR)/artifacts/artifacts.bullseye.tar.gz) ||:
+diff-%:
+	diff -u <(tar -tzf <(git show HEAD^:artifacts/artifacts.$*.tar.gz))  <(tar -tzf $(CURDIR)/artifacts/artifacts.$*.tar.gz) ||:
 
 # task clean[-DISTRO]
 # clean docker artifacts for one distro, or all artifacts
 clean:
 	- rm -rf $(WHEELS_DIR)
 
-.PHONY: artifacts all wheels clean diff
+.PHONY: artifacts bullseye trixie all clean
