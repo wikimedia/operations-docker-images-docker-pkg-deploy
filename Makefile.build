@@ -17,10 +17,10 @@ all: clean bullseye diff-bullseye trixie diff-trixie
 
 artifacts: bullseye trixie
 
-bullseye: os-artifacts-bullseye
+bullseye: clean os-artifacts-bullseye
 	cp $(BULLSEYE_ARTIFACTS) $(CURDIR)/artifacts/artifacts.bullseye.tar.gz
 
-trixie: os-artifacts-trixie
+trixie: clean os-artifacts-trixie
 	cp $(TRIXIE_ARTIFACTS) $(CURDIR)/artifacts/artifacts.trixie.tar.gz
 
 os-artifacts-%:
